@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <title>実行タイミング</title>
+    <style>
+    </style>
+    <link rel="stylesheet" type="text/css" href="style.css" media="all">
+    <!--<script>alert(6);</script>-->
+</head>
+<body>
+    <!--<a href="#content1">content1へジャンプ？</a>-->
+    <p>最終更新日：2019/5/3</p>
+    
+    <!--<button id="soundstart">soundstart</button>-->
+    <!--<p class="para_name test" width="256">第二音のずれ</p>-->
+   <section class="synth_parameter">
+        <table border=5>
+            <caption>シンセサイザー パラメーター</caption>
+            <tbody>
+                <tr>
+                    <td>
+                        <div for="osc2_detune_cur" class="para_name">第二音のずれ</div>
+                        <div><input type="range" id="osc2_detune_cur" name="osc2dcr" min="-100" max="100" value="60" step="2"></div>
+                        <span id="osc2_dt_val">60</span><span>Hz</span>
+                    </td>
+                    <td>
+                        <div for="volume" class="para_name">音量</div>
+                        <div><input type="range" id="volume" name="volume" min="0" max="190" value="24" step="2"></div>
+                        <span id="volume_val">24</span><span>%</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div for="attack" class="para_name">発音遅延</div>
+                        <div><input type="range" id="attack" name="attack" min="0" max="3" value="0.1" step="0.1"></div>
+                        <span id="attack_val">0.1</span><span>秒</span>
+                    </td>
+                    <td>
+                        <div for="release" class="para_name">発音後の残響</div>
+                        <div><input type="range" id="release" name="release" min="0" max="3" value="0.5" step="0.1"></div>
+                        <span id="release_val">0.5</span><span>秒</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div for="delay_vol" class="para_name">こだまの音量</div>
+                        <div><input type="range" id="delay_vol" name="delay_vol" min="0" max="100" value="30" step="2"></div>
+                        <span id="delay_vol_val">30</span><span>%</span>
+                    </td>
+                    <td>
+                        <div for="delay_time" class="para_name">こだまの間隔</div>
+                        <div><input type="range" id="delay_time" name="delay_time" min="0" max="5" value="1" step="0.1"></div>
+                        <span id="delay_time_val">1</span><span>秒</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <p>パソコンのキーを押しても音がなるよ(z=ド)</p>
+    <section class="black_keys">
+        <button id="c#4" class="black_key">ド#<br>s</button>
+        <button id="d#4" class="black_key">レ#<br>d</button>
+        <button id="n1" class="no-key"></button>
+        <button id="f#4" class="black_key">ファ#<br>g</button>
+        <button id="g#4" class="black_key">ソ#<br>h</button>
+        <button id="a#4" class="black_key">ラ#<br>j</button>
+    </section>
+    <section class="white_keys">
+        <button id="c4" class="white_key">ド<br>z</button>
+        <button id="d4" class="white_key">レ<br>x</button>
+        <button id="e4" class="white_key">ミ<br>c</button>
+        <button id="f4" class="white_key">ファ<br>v</button>
+        <button id="g4" class="white_key">ソ<br>b</button>
+        <button id="a4" class="white_key">ラ<br>n</button>
+        <button id="b4" class="white_key">シ<br>m</button>
+        <button id="c5" class="white_key">ド<br>,</button>
+    </section>
+
+   <button id="soundstart">soundstart</button>
+
+
+    <script src="script.js"></script>
+    
+</body>
+</html>
