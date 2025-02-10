@@ -1,3 +1,3 @@
-|ID|name|remark|
-|----|----|----|
-|R.W.S.0001|don’t progress|-|
+|ID|name|link|remark|
+|----|----|----|----|
+|W.S.0001|進捗が悪い時|-|-|
