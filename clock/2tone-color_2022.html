@@ -1,0 +1,498 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<link rel="icon" type="image/png" href="icon.png">
+<script>
+
+    
+////////////////////////////////////////////////////////////
+// common: sound
+////////////////////////////////////////////////////////////
+    document.addEventListener("DOMContentLoaded", function(){
+        var rangeValue = function (input, output) {
+            return function(evt){
+                output.innerHTML = input.value;
+            }
+        }
+        var volume_dis = document.getElementById('volume');
+        var volume_val = document.getElementById('volume_val');
+        volume_dis.addEventListener('input', rangeValue(volume_dis, volume_val));
+    }, false);
+    
+    //ring sound
+    function sound_start(key_tag, max_step){
+        var volume_dis = document.getElementById('volume');
+        vol_num = Number(volume_dis.value);
+        vol_num = vol_num / 100;
+
+        var attack_num = 0;
+
+        // Web Audio APIを利用するためのインスタンス生成
+        var audioContext = new AudioContext();
+
+        // オシレーターを作成
+        var osciillatorNode1 = audioContext.createOscillator();
+
+        // エンベロープジェネレーターを作成
+        var envelopeGen1 = audioContext.createGain();
+
+        // オシレーター(osciillatorNode1)をエンベロープジェネレーター(envelopeGen1)に接続
+        osciillatorNode1.connect(envelopeGen1); 
+
+        // エンベロープジェネレーターを最終出力に接続
+        envelopeGen1.connect(audioContext.destination);
+
+        //key_tag = 69; //A4
+        //60:C4, 70:A#4, 81:A5
+        var freq1 = 440.0 * Math.pow(2.0, (key_tag - 69.0) / 12.0);
+
+        // オシレーターの周波数を決定
+        osciillatorNode1.frequency.value = freq1;
+
+        // 現在の時間を取得
+        var t1 = audioContext.currentTime;
+        //t1以降のスケジューリングを解除する
+        envelopeGen1.gain.cancelScheduledValues(t1);
+
+        //t1にボリューム0で開始
+        //max_step = 3;
+        long = (max_step + 1)*0.1;
+        for (let step = 0; step < max_step; step++) {
+            //setValueAtTime: t1+step/10にボリュームvol_numで開始
+            envelopeGen1.gain.setValueAtTime(vol_num, t1+step/10);
+            //(linearRampToValueAtTime(A, B) : A=Volume, B=B秒後にボリューム最大
+            envelopeGen1.gain.linearRampToValueAtTime(0, t1+step/10+0.07)
+        }
+
+        // 発音開始
+        osciillatorNode1.start();
+
+        // 発音解除
+        osciillatorNode1.stop(t1 + long);
+
+    }
+
+////////////////////////////////////////////////////////////
+// clock
+////////////////////////////////////////////////////////////
+
+    let year;
+    let mon;
+    let day;
+    let dotw;
+    let hour;
+    let min;
+    let sec;
+            
+    let e_dotw;
+    let ymd_msg;
+    let hms_msg;
+
+    //when click clock's on/off
+    document.addEventListener("DOMContentLoaded", function(){
+        const clockButton = document.getElementById("clock");
+        let cc_flag = "off";
+        let ccID;
+        
+        //change timezone
+        function changeTimeZone2(date,timeZone){
+            return new Date(
+                date.toLocaleString('en-US', {
+                    timeZone,
+                }),
+            );
+        }
+
+        //make string of clock
+        function ch_ymdhms(Date){
+            year = Date.getFullYear();
+            mon = String(Date.getMonth() + 1).padStart(2, '0'); 
+            day = String(Date.getDate()).padStart(2, '0') ;
+            dotw = Date.getDay(); //曜日(0～6=日～土)
+            hour = String(Date.getHours()).padStart(2, '0');
+            min  = String(Date.getMinutes()).padStart(2, '0');
+            sec  = String(Date.getSeconds()).padStart(2, '0');
+                    
+            e_dotw = new Array("Sun","Mon","Tue","Wed","Thu","Fri","Sat");
+            ymd_msg = year + "-" + mon + "-" + day + " " + e_dotw[dotw];
+            hms_msg = hour + ":" + min + ":" + sec;
+
+            return [ymd_msg,hms_msg];
+        }
+        
+        let now;
+        let ymdhms;
+
+        //main clock
+        function showClock1() {
+            now = new Date();
+            
+            //display JST
+            ymdhms = ch_ymdhms(now);
+            document.getElementById("ymd").innerHTML = ymdhms[0];
+            document.getElementById("hms").innerHTML = ymdhms[1];
+
+            //display PDT/PST
+            const PDTPST = changeTimeZone2(new Date(), 'America/Los_Angeles');
+            let ymdhms2 = ch_ymdhms(PDTPST);
+            document.getElementById("pdtpst").innerHTML = "PDT/PST: "+ymdhms2[0]+" "+ymdhms2[1];
+            ccID=setTimeout(showClock1,1000);
+
+        }
+        //cc_iD=showClock1();
+        clockButton.addEventListener('click', function() {
+            if(cc_flag=="off"){
+                cc_flag="on"
+                ccID=showClock1();
+                //console.log("test2");
+            }else{
+                cc_flag="off"
+                clearTimeout(ccID);
+                document.getElementById("ymd").innerHTML = "YYYY-MM-DD";
+                document.getElementById("hms").innerHTML = "hh:mm:ss";
+                document.getElementById("pdtpst").innerHTML = "PDT/PST: YYYY-MM-DD hh:mm:ss";
+            }   
+        });
+    }, false);
+
+////////////////////////////////////////////////////////////
+// auto timer
+////////////////////////////////////////////////////////////
+    document.addEventListener("DOMContentLoaded", function(){
+        const auto_timer = document.getElementById('soundstart');
+        let atID;
+        let at_flag="off";
+        let date_a;
+        let Date_target;
+        let m;
+        let s;
+
+        let Date_a5m = new Date(); // target m:ss per 5:00        
+        let r5m = 0;
+
+        let Date_a30m = new Date(); // target mm:ss per 30:00        
+        let r30m = 0;
+
+        function atms(r_time){
+            m  = String(r_time.getMinutes());//.padStart(2, '0');
+            s  = String(r_time.getSeconds()).padStart(2, '0'); 
+            return m + ":" + s;
+        }
+
+        function initiator(x){
+            date_a= new Date();
+            Date_target= new Date();
+            x=Number(x);
+            Date_target.setMinutes(Math.floor(date_a.getMinutes() / x) * x + x); //target mm initialize. next ringing time
+            Date_target.setSeconds(0); //target ss initialize
+            return Date_target;
+        }
+
+        function reg_min(r5m,r30m){
+            date_a= new Date();
+
+            r5m = new Date(Date_a5m - date_a);
+            if (r5m <= 0){
+                Date_a5m = initiator(5);    //make next ringing time
+                sound_start(69, 3); //ringing
+                r5m = new Date(Date_a5m - date_a); //if r5m <= 0, setting next target
+            }
+            document.getElementById("min5").innerHTML = atms(r5m) + " / 5:00";
+            
+            r30m = new Date(Date_a30m - date_a);
+            if (r30m <= 0){
+                Date_a30m = initiator(30);
+                sound_start(81, 6);
+                r30m = new Date(Date_a30m - date_a);
+            }
+            document.getElementById("min30").innerHTML = atms(r30m) + " / 30:00";
+
+            //launch reg_min every second. argument is r5m & r30m
+            atID=setTimeout(reg_min,1000,r5m,r30m); 
+        }
+
+        //when click on/off of autotimer
+        auto_timer.addEventListener('click', function() {
+            if(at_flag=="off"){
+                at_flag="on"
+                atID=reg_min(r5m,r30m);
+            }else{
+                at_flag="off"
+                clearTimeout(atID);
+                document.getElementById("min5").innerHTML = "-:-- / 5:00";
+                document.getElementById("min30").innerHTML = "--:-- / 30:00";
+            }
+        });
+
+    }, false);
+
+////////////////////////////////////////////////////////////
+// countdown timer
+////////////////////////////////////////////////////////////
+
+    document.addEventListener("DOMContentLoaded", function(){
+        // DOMContentLoaded: kick after content read
+        const startButton = document.getElementById("start");
+        //const stopButton = document.getElementById('stop');
+        const resetButton = document.getElementById('reset');
+        var stopTime = 0;
+        var endDate;
+        let ct_flag = "off";
+        let timeoutID;
+        let h9 = 9*60*60*1000;
+        
+        function countdown12(cdt) { //lunch when startButton is clicked
+            //get current time
+            var now = new Date();
+
+            //get gap. endDate=stop time of counting down . stopTime=time that was stopped
+            var remain = new Date(endDate - now - stopTime);
+            remain.setHours(remain.getHours() - Number(9)); //maybe adjust JST
+
+            //gap change h:m:s
+            var rh = String(remain.getHours()).padStart(2, '0');
+            var rm = String(remain.getMinutes()).padStart(2, '0');
+            var rs = String(remain.getSeconds()).padStart(2, '0');
+            var hms_msg = rh + ":" + rm + ":" + rs + " / " + cdt;
+
+            //rewrite html
+            document.getElementById("cdt2").innerHTML = hms_msg;
+            //console.log("test-cd")
+            if (remain <= -h9){
+                clearTimeout(timeoutID);
+                reset_ct();
+                sound_start(84, 10);
+                //sound_start(74, 3.7);
+            }else{
+                timeoutID = setTimeout(countdown12, 100, cdt);
+                //timeoutID = setTimeout(countdown12, 10000, cdt);
+            }
+        }
+
+
+        startButton.addEventListener('click', () => {
+            if (ct_flag == "off"){ //default or when stopping count down
+                ct_flag = "on"
+                //button which don't need use are disable
+                startButton.disabled = false;
+                resetButton.disabled = false;
+                startTime = Date.now();
+
+                //get input time. default 15:00
+                var cdto = document.getElementById('cdt');
+                cdt = cdto.value
+                let [h, m, s] = (cdt).split(':');
+
+                //"current time" + "input time"
+                endDate = new Date();
+                endDate.setHours(endDate.getHours() + Number(h));
+                endDate.setMinutes(endDate.getMinutes() + Number(m)); 
+                endDate.setSeconds(endDate.getSeconds() + Number(s)); 
+                countdown12(cdt);
+            }else{ // 時間を止める
+                ct_flag = "off"
+                //button which don't need use are disable
+                startButton.disabled = false;
+                //stopButton.disabled = true;
+                resetButton.disabled = false;
+
+                //stop countdown
+                clearTimeout(timeoutID);
+                stopTime += (Date.now() - startTime);
+            }
+
+        });
+
+        // リセットボタンがクリックされたら時間を0に戻す
+        resetButton.addEventListener('click', function() {
+            reset_ct();
+        });
+
+        function reset_ct() {
+            ct_flag = "off"
+            startButton.disabled = false;
+            //stopButton.disabled = true;
+            resetButton.disabled = true;
+            stopTime = 0;
+            document.getElementById("cdt2").innerHTML = "00:00:00 / " + cdt;            
+        }
+
+    }, false);
+
+////////////////////////////////////////////////////////////
+// stop watch
+////////////////////////////////////////////////////////////
+
+    document.addEventListener("DOMContentLoaded", function(){
+        const time2 = document.getElementById('time2');
+        const startButton2 = document.getElementById('start2');
+        //const stopButton2 = document.getElementById('stop2');
+        const resetButton2 = document.getElementById('reset2');
+
+        // 開始時間
+        let startTime2;
+        // 停止時間
+        let stopTime2 = 0;
+        // タイムアウトID
+        let timeoutID2;
+        let sw_flag = "off";
+
+        // 時間を表示する関数
+        function displayTime() {
+            const currentTime2 = new Date(Date.now() - startTime2 + stopTime2);
+            const h2 = String(currentTime2.getHours()-9).padStart(2, '0');
+            const m2 = String(currentTime2.getMinutes()).padStart(2, '0');
+            const s2 = String(currentTime2.getSeconds()).padStart(2, '0');
+            const ms2 = String(currentTime2.getMilliseconds()).padStart(3, '0');
+
+            time2.textContent = `${h2}:${m2}:${s2}.${ms2}`;
+            timeoutID2 = setTimeout(displayTime, 100);
+        }
+
+        // スタートボタンがクリックされたら時間を進める
+        startButton2.addEventListener('click', () => {
+            if (sw_flag == "off"){
+                sw_flag = "on";
+                startButton2.disabled = false;
+                resetButton2.disabled = false;
+                startTime2 = Date.now();
+                displayTime();
+            }else{
+                sw_flag = "off";
+                startButton2.disabled = false;
+                resetButton2.disabled = false;
+                clearTimeout(timeoutID2);
+                stopTime2 += (Date.now() - startTime2);
+            }
+        });
+
+        // リセットボタンがクリックされたら時間を0に戻す
+        resetButton2.addEventListener('click', function() {
+            startButton2.disabled = false;
+            resetButton2.disabled = true;
+            time2.textContent = '00:00:00.000';
+            stopTime2 = 0;
+        });
+
+    }, false);
+
+//    window.onload = countdown;
+
+</script>
+<style type="text/css">
+ 
+    body {
+	    background-color:#000000;		/*ページ全体の背景色*/
+	    font-size:300%;			/* フォントサイズ */
+	    font-family: "ＭＳ ゴシック",sans-serif;	/* フォントの種類 */
+	    color:#FF6700;			/* 文字色 */
+        line-height:1;
+
+    }
+    input {
+	    background-color:#000000;		/*ページ全体の背景色*/
+        border-color:#FF6700;
+	    color:#FF6700;			/* 文字色 */
+        font-size: 50%;
+
+    }
+    p{
+        margin: 5px;
+    }
+    .border{
+	    background-color:#000000;		/*ページ全体の背景色*/
+        border:1px solid;
+        display: inline-block;
+        border-color:#FF6700;
+        font-size:50%;	
+	    color:#FF6700;			/* 文字色 */
+        /*line-height:1;*/
+    }
+    .border2{
+	    background-color:#000000;		/*ページ全体の背景色*/
+        border:1px solid;
+        border-color:#FF6700;
+	    color:#FF6700;			/* 文字色 */
+        <!--width: 40%;px;-->
+        width: 10px;
+        max-width: 500px;
+        <!--display: inline-block;-->
+        /*line-height:1;*/
+    }
+
+    #pdtpst{
+        font-size:30%;
+    }
+    input[type="range"] {
+        -webkit-appearance: none; /* これ無しだとスタイルがほぼ全く反映されないので注意 */
+        appearance: none;
+        cursor: pointer; /* カーソルを分かりやすく */
+        outline: none; /* スライダーのアウトラインは見た目がキツイので消す */
+        height: 14px; /* バーの高さ */
+        width: 70%; /* バーの幅 */
+        background: #000000; /* バーの背景色 */
+        border-radius: 10px; /* バーの両端の丸み */
+        border: solid 3px #FF6700; /* バー周囲の線 */
+    }    
+    /* WebKit向けのつまみ */
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none; /*  デフォルトのつまみのスタイルを解除 */
+        background: #FF6700; /* 背景色 */
+        width: 15px; /* 幅 */
+        height: 15px; /* 高さ */
+        border-radius: 50%; /* 円形に */
+        box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, 0.15); /* 影 */
+    }
+
+</style>
+</head>
+<body>
+<!--clock-->
+<div id="currenttime" class="border2">
+    <p class="border">current time</p>
+    <input id="clock" type="button" value="on/off">
+    <p id="ymd">YYYY-MM-DD</p>
+    <p id="hms">hh:mm:ss</p>
+    <p id="pdtpst">PDT/PST: YYYY-MM-DD hh:mm:ss</p>
+</div>
+
+<!--auto timer-->
+<div id="autotime" class="border2">
+    <p class="border">auto timer</p>
+    <!--<button id="soundstart" type="button">soundstart</button>-->
+    <input id="soundstart" type="button" value="on/off">
+    <div>
+        <p id="min30">--:-- / 30:00</p>
+        <p id="min5">-:-- / 5:00</p>
+    </div>
+</div>
+
+<!--count down timer-->
+<div id="buttons" class="border2">
+    <input id="cdt" type="time" value="00:15:00" step="1">
+    <input id="start" type="button" value="start/stop">
+    <!--<input id="stop" type="button" value="stop">-->
+    <input id="reset" type="button" value="reset">
+    <div id="cdt2">00:00:00</div>
+</div> 
+
+<!--stop watch-->
+<div id="buttons2" class="border2">
+    <input id="start2" type="button" value="start/stop">
+    <!--<input id="stop2" type="button" value="stop">-->
+    <input id="reset2" type="button" value="reset">
+    <div id="time2">00:00:00.000</div>
+</div> 
+
+<div id="volumes" class="border2">
+    <div  class="rgb">
+        <p class="border">volume</p>
+        <span id="volume_val">10</span><span>%</span>
+        <input type="range" id="volume" name="volume" min="0" max="100" value="10" step="2">
+    </div>
+
+</div>
+
+<canvas id="canvas" width="800" height="800"></canvas>
+</body>
+</html>

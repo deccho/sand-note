@@ -1,0 +1,60 @@
+section{
+    float:both;
+}
+
+.synth_parameter{
+	margin : 30px ;
+	border:5px solid white;
+	border-radius:30px;
+	box-shadow:1px 1px 15px;
+}
+.synth_parameter table{
+	margin : 10px ;
+	border:5px solid white; 
+	border-radius:10px;
+	box-shadow:0px 0px 0px;
+    border-collapse:separate;
+    border-spacing:10px;
+}
+.synth_parameter td{
+	margin : 5px ;
+	border:5px solid green; 
+	border-radius:10px;
+	box-shadow:1px 1px 1px;
+    border-collapse:separate;
+    border-spacing:10px;
+}
+.synth_parameter div{
+	float:left;
+}
+.para_name{
+    width: 120px; 
+}
+.black_keys{
+    margin-left: 70px;
+}
+.white_keys{
+    margin-left: 35px;
+}
+
+
+.no-key{
+    width:70px;
+    border:5px solid white; 
+}
+.black_key{
+    background-color: #000;
+    color: #fff;
+	box-shadow:1px 1px 15px  rgba(0,0,0,0.3);;
+    width:70px;
+    height:140px;
+    font-size: 1.2em;
+}
+.white_key{
+    background-color: #fff;
+    color: #000;
+	box-shadow:1px 1px 15px rgba(0,0,0,0.3);;
+    width:70px;
+    height:140px;
+    font-size: 1.2em;
+}
